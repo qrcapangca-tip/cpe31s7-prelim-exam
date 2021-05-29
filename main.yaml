@@ -1,0 +1,48 @@
+---
+
+- name: Plays for VMs
+  hosts: all
+  vars:
+    username: qrcapangca-tip
+    password: PrelimExam
+    studentnumber: 1313010
+    groupname: sysad2
+
+  tasks:
+
+  - name: Ping the VMs
+    ansible.builtin.ping:
+
+  - name: Change motd in '/etc/motd'
+    ansible.builtin.lineinfile:
+      path: '/etc/motd'
+      line: 'Ansible Managed by {{ studentnumber }}'
+      state: present
+
+  - name: Create a user with a password
+    ansible.builtin.user:
+      name: "{{ username }}"
+      state: present
+      password: "{{ password | password_hash('sha512') }}"
+        
+  - name: Making the user a passwordless sudoer user
+    ansible.builtin.lineinfile:
+      path: '/etc/sudoers'
+      line: '{{ username }} ALL=(ALL) NOPASSWD: ALL'
+      state: present
+
+  - name: Create a group named 'sysad2'
+    ansible.builtin.group:
+      name: "{{ groupname }}"
+      state: present
+
+  - name: Add EPEL repository
+    ansible.builtin.dnf:
+      name: epel-release
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: Install htop package
+    ansible.builtin.dnf:
+      name: htop
+      state: latest
